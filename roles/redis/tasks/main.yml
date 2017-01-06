@@ -1,0 +1,79 @@
+---
+
+- name: install dependencies
+  apt:
+    name: "{{ item }}"
+    update_cache: yes
+    state: installed
+  with_items:
+    - build-essential
+    - tcl
+    - unzip
+
+- name: download and unarchive redis binaries
+  unarchive:
+    src: http://download.redis.io/releases/redis-3.2.6.tar.gz
+    dest: "/tmp"
+    remote_src: true
+
+- name: install redis from binaries
+  make:
+    chdir: "/tmp/redis-3.2.6/"
+    target: install
+  become: true
+
+- group:
+    name: redis
+    state: present
+
+- name: create user redis
+  user:
+    name: redis
+    group: redis
+    system: yes
+    home: "/var/lib/redis"
+    shell: "/bin/false"
+
+- name: create redis config directory
+  file:
+    path: "{{redis_conf_dir}}"
+    state: directory
+    mode: 0755
+    owner: redis
+
+
+- name: create the system.d servive file for redis
+  template:
+    src: "{{ redis_conf_templates_dir }}redis.service.j2"
+    dest: "/etc/systemd/system/redis.service"
+    mode: 0644
+    backup: true
+  become: true
+  notify:
+    - restart redis
+
+- name: create redis backup directory
+  file:
+    path: "/var/lib/redis"
+    state: directory
+    mode: 0770
+    owner: redis
+  notify:
+    - restart redis
+
+- name: create the redis configuration file
+  template:
+    src: "{{ redis_conf_templates_dir }}redis.conf.j2"
+    dest: "{{ redis_conf_path }}"
+    mode: 0644
+    backup: yes
+  become_user: redis
+  notify:
+    - restart redis
+
+- name: start redis
+  systemd:
+    name: redis
+    state: started
+    enabled: yes
+  become: true

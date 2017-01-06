@@ -1,0 +1,9 @@
+---
+
+redis_conf_dir: "/etc/redis/"
+redis_conf_path: "{{redis_conf_dir}}redis.conf"
+redis_version: "redis-3.2.6"
+redis_download_url: "http://download.redis.io/releases/{{redis_version}}.tar.gz"
+redis_download_path: "/tmp/{{ redis_version }}.tar.gz"
+redis_dist_path: "/tmp/redis-dist"
+redis_conf_templates_dir: "redis-conf-templates/"

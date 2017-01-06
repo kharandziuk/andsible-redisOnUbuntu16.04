@@ -1,0 +1,7 @@
+---
+
+- name: install python 2 # ubuntu 16.04 use python 3 by default
+  raw: test -e /usr/bin/python || (apt -y update && apt install -y python-minimal)
+  changed_when: false
+- name: gather facts when python2 is installed
+  setup:
